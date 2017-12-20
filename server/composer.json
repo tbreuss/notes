@@ -1,0 +1,14 @@
+{
+  "require": {
+    "catfan/Medoo": "^1.5",
+    "phroute/phroute": "^2.1"
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "src\\": "src/"
+    }
+  },
+  "scripts": {
+    "run": "php -S localhost:9999 -t ./public"
+  }
+}
