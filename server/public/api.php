@@ -6,12 +6,11 @@ ini_set("error_log", sprintf("%s/log/%s-error.log", dirname(__DIR__), date('Y-m'
 
 require '../vendor/autoload.php';
 
-use Phroute\Phroute\RouteCollector;
-use Phroute\Phroute\Dispatcher;
-use Phroute\Phroute\Exception\HttpRouteNotFoundException;
 use Medoo\Medoo;
+use Phroute\Phroute\Dispatcher;
+use Phroute\Phroute\RouteCollector;
 
-sleep(1);
+//sleep(1);
 
 $config = require '../config/database.php';
 $database = new Medoo($config);
@@ -26,39 +25,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 
-$router->get('/articles', function() use ($database) {
-    $where = [];
+$router->get('/articles', function () use ($database) {
+
     $q = isset($_GET['q']) ? $_GET['q'] : '';
-    if (!empty($q)) {
-        $where = [
-            "OR" => [
-                "title[~]" => $q,
-                "abstract[~]" => $q,
-                "content[~]" => $q,
-            ]
-        ];
-    }
-
-    // Pagination
-    $totalCount = $database->count('articles', $where);
-
-    $orders = [
-        'title' => ['title' => 'ASC'],
-        'changed' => ['modified' => 'DESC']
-    ];
-    $orderKey = isset($_GET['sort']) ? $_GET['sort'] : 'title';
-    $where['ORDER'] = isset($orders[$orderKey]) ? $orders[$orderKey] : '';
-
-
+    $tags = isset($_GET['tags']) ? $_GET['tags'] : [];
     $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
     if ($page < 1) {
         $page = 1;
     }
+    $orderKey = isset($_GET['sort']) ? $_GET['sort'] : 'default';
 
-    $where['LIMIT'] = [($page - 1) * 20, 20];
+    $sql = "SELECT SQL_CALC_FOUND_ROWS id, title, abstract, tags FROM articles WHERE 1=1";
 
+    $params = [];
 
-    $articles = $database->select('articles', ['id', 'title', 'abstract', 'tags'], $where);
+    if (!empty($q)) {
+        $sql .= " AND (title LIKE ? OR abstract LIKE ? OR content LIKE ?)";
+        $params[] = $q;
+        $params[] = $q;
+        $params[] = $q;
+    }
+
+    if (!empty($tags)) {
+        foreach ($tags as $tag) {
+            $sql .= " AND FIND_IN_SET(?, tags)>0";
+            $params[] = $tag;
+        }
+    }
+
+    $orders = [
+        'title' => 'title ASC',
+        'changed' => 'modified DESC',
+        'default' => 'title ASC'
+    ];
+    if (isset($orders[$orderKey])) {
+        $sql .= " ORDER BY " . $orders[$orderKey];
+    }
+
+    $sql .= " LIMIT " . ($page - 1) * 20 . ', ' . 20;
+
+    $stmt = $database->pdo->prepare($sql);
+    $stmt->execute($params);
+
+    $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $sql = 'SELECT FOUND_ROWS()';
+    $stmt = $database->pdo->prepare($sql);
+    $stmt->execute();
+    $totalCount = $stmt->fetchColumn();
 
     foreach ($articles as $i => $a) {
         $articles[$i]['tags'] = explode(',', $a['tags']);
@@ -66,7 +80,6 @@ $router->get('/articles', function() use ($database) {
 
     return [
         'articles' => $articles,
-        'tags' => array_unique($tags),
         'paging' => [
             'itemsPerPage' => 20,
             'totalItems' => $totalCount,
@@ -76,18 +89,18 @@ $router->get('/articles', function() use ($database) {
     ];
 });
 
-$router->get('/articles/{id}', function($id) use ($database) {
+$router->get('/articles/{id}', function ($id) use ($database) {
     $article = $database->get('articles', '*', ['id' => $id]);
     if (empty($article)) {
         throw new \Exception('Not found');
     }
-    $database->update('articles', [	"views[+]" => 1], ['id' => $id]);
+    $database->update('articles', ["views[+]" => 1], ['id' => $id]);
     $article = handle_custom_tags($article, 'content');
     $article['tags'] = explode(',', $article['tags']);
     return $article;
 });
 
-$router->post('/add-article', function() use ($database) {
+$router->post('/add-article', function () use ($database) {
     $json = file_get_contents('php://input');
     $data = json_decode($json, true);
 
@@ -118,7 +131,7 @@ $router->post('/add-article', function() use ($database) {
     ];
 });
 
-$router->get('/selectedtags', function() use ($database) {
+$router->get('/selectedtags', function () use ($database) {
 
     $q = isset($_GET['q']) ? $_GET['q'] : '';
     $tags = isset($_GET['tags']) ? $_GET['tags'] : [];
@@ -156,7 +169,7 @@ $router->get('/selectedtags', function() use ($database) {
     return $tags;
 });
 
-$router->get('/tags', function() use ($database) {
+$router->get('/tags', function () use ($database) {
     $orders = [
         'name' => ['name' => 'ASC'],
         'frequency' => ['frequency' => 'DESC'],
@@ -168,12 +181,12 @@ $router->get('/tags', function() use ($database) {
     return $articles;
 });
 
-$router->get('/tags/{id}', function($id) use ($database) {
+$router->get('/tags/{id}', function ($id) use ($database) {
     $article = $database->get('tags', '*', ['id' => $id]);
     return $article;
 });
 
-$router->get('/popular', function() use ($database) {
+$router->get('/popular', function () use ($database) {
     $where = [];
     $where['ORDER'] = ['views' => 'DESC'];
     $where['LIMIT'] = 5;
@@ -181,7 +194,7 @@ $router->get('/popular', function() use ($database) {
     return $articles;
 });
 
-$router->get('/latest', function() use ($database) {
+$router->get('/latest', function () use ($database) {
     $where = [];
     $where['ORDER'] = ['created' => 'DESC'];
     $where['LIMIT'] = 5;
@@ -189,7 +202,7 @@ $router->get('/latest', function() use ($database) {
     return $articles;
 });
 
-$router->get('/modified', function() use ($database) {
+$router->get('/modified', function () use ($database) {
     $where = [];
     $where['ORDER'] = ['modified' => 'DESC'];
     $where['LIMIT'] = 5;
