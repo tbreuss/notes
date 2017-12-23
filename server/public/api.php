@@ -8,6 +8,7 @@ require '../vendor/autoload.php';
 require '../src/functions.php';
 
 use Phroute\Phroute\Dispatcher;
+use Phroute\Phroute\Exception\HttpRouteNotFoundException;
 use Phroute\Phroute\RouteCollector;
 
 //sleep(1);
@@ -86,8 +87,90 @@ $router->get('/modified', function (): array {
     return find_selected_articles(['modified' => 'DESC']);
 });
 
-$dispatcher = new Dispatcher($router->getData());
-$response = $dispatcher->dispatch(get_request_method(), get_url_path());
+$router->post('/auth/login', function (): array {
+    $data = get_php_input();
+    $errors = validate_login($data);
+    if (empty($errors)) {
+        $user = auth_user($data['username'], $data['password']);
+        if (empty($user)) {
+            $errors['form'] = 'Benutzername oder Passwort ungültig';
+        } else {
+            $token = generate_token($user);
+            return [
+                'token' => $token
+            ];
+        }
+    }
+    return [
+        'errors' => $errors
+    ];
+});
 
-header('Access-Control-Allow-Origin: *');
-echo json_encode($response);
+$router->post('/auth/logout', function (): array {
+    auth_logout();
+    return [
+        true
+    ];
+});
+
+function validate_login(array $data): array
+{
+    $errors = [];
+    if (empty($data['username'])) {
+        $errors['username'] = 'Benutzername fehlt';
+    }
+    if (empty($data['password'])) {
+        $errors['password'] = 'Passwort fehlt';
+    }
+    return $errors;
+}
+
+function auth_logout(string $token)
+{
+}
+
+function auth_user(string $username, string $password): array
+{
+    $user = find_user($username);
+    if (!empty($user)) {
+        if (validate_password($password, $user)) {
+            return $user;
+        }
+    }
+    return [];
+}
+
+function generate_token(array $user): string
+{
+    return 'generated_token';
+}
+
+function find_user(string $username): array
+{
+    $user = get_database()->get('users', '*', [
+        'username' => $username,
+        'deleted' => 0
+    ]);
+    if (empty($user)) {
+        return [];
+    }
+    return $user;
+}
+
+try {
+    $dispatcher = new Dispatcher($router->getData());
+    $response = $dispatcher->dispatch(get_request_method(), get_url_path());
+    header('Access-Control-Allow-Origin: *');
+    echo json_encode($response);
+
+} catch (HttpRouteNotFoundException $e) {
+
+    header('HTTP/1.0 404 Not Found');
+    echo json_encode(['error' => $e->getMessage()]);
+
+} catch (\Exception $e) {
+
+    header('HTTP/1.0 500');
+    echo json_encode(['error' => $e->getMessage()]);
+
+}

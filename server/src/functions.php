@@ -318,3 +318,18 @@ function get_query_var(string $name, $default = null)
     }
     return $input;
 }
+
+function validate_password($password, array $user)
+{
+    return hash_password($password, $user['salt']) === $user['password'];
+}
+
+function hash_password($password,$salt)
+{
+    return md5($salt.$password);
+}
+
+function generate_salt()
+{
+    return uniqid('',true);
+}
