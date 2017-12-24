@@ -4,20 +4,20 @@ namespace db\article;
 
 use common;
 use jwt;
-use tag;
+use db\tag;
 
 function find_selected(array $fields, array $order): array
 {
     $where = [];
     $where['ORDER'] = $order;
     $where['LIMIT'] = 5;
-    $articles = common\database()->select('articles', $fields, $where);
+    $articles = common\medoo()->select('articles', $fields, $where);
     return $articles;
 }
 
 function find_one(int $id, bool $throwException = true): array
 {
-    $article = common\database()->get('articles', '*', ['id' => $id]);
+    $article = common\medoo()->get('articles', '*', ['id' => $id]);
     if ($throwException && empty($article)) {
         throw new \Exception('Not found');
     }
@@ -26,21 +26,21 @@ function find_one(int $id, bool $throwException = true): array
     return $article;
 }
 
-function update_views(int $id): int
+function increase_views(int $id): int
 {
-    $data = common\database()->update('articles', ['views[+]' => 1], ['id' => $id]);
+    $data = common\medoo()->update('articles', ['views[+]' => 1], ['id' => $id]);
     return $data->rowCount();
 }
 
 
-function add(array $data): int
+function insert(array $data): int
 {
     $user = jwt\get_user_from_token();
     $data['created'] = date('Y-m-d H:i:s');
     $data['created_user'] = $user['id'];
     $data['tags'] = sanitize_tags($data['tags']);
-    common\database()->insert('articles', $data);
-    $id = common\database()->id();
+    common\medoo()->insert('articles', $data);
+    $id = common\medoo()->id();
     tag\save_all($data['tags'], $user);
     return $id;
 }

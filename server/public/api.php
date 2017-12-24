@@ -49,7 +49,7 @@ $router->get('/articles', function (): array {
 
 $router->get('/articles/{id}', function (int $id): array {
     $article = db\article\find_one($id);
-    db\article\update_views($id);
+    db\article\increase_views($id);
     return $article;
 });
 
@@ -57,7 +57,7 @@ $router->post('/add-article', function (): array {
     $data = request\php_input();
     $errors = db\article\validate($data);
     if (empty($errors)) {
-        db\article\add($data);
+        db\article\insert($data);
         return ['success' => true];
     }
     return [

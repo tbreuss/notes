@@ -24,13 +24,6 @@ function find_one(int $id): array
     return $article;
 }
 
-function sanitize(string $strtags): string
-{
-    $tags = explode(',', $strtags);
-    $sanitized = array_map('trim', $tags);
-    return implode(',', $sanitized);
-}
-
 function save_all(string $strtags, array $user)
 {
     $tags = explode(',', $strtags);
