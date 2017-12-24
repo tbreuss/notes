@@ -5,7 +5,6 @@ ini_set('log_errors', 1);
 ini_set('error_log', sprintf('%s/log/%s-error.log', dirname(__DIR__), date('Y-m')));
 
 require '../vendor/autoload.php';
-require '../src/functions.php';
 
 use Phroute\Phroute\Dispatcher;
 use Phroute\Phroute\Exception\HttpRouteNotFoundException;
@@ -13,7 +12,7 @@ use Phroute\Phroute\RouteCollector;
 
 //sleep(1);
 
-if (get_request_method() === 'OPTIONS') {
+if (request\method() === 'OPTIONS') {
     header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
     header('Access-Control-Allow-Headers: X-Requested-With, Content-Type, Accept, Origin, Authorization');
     header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -22,17 +21,25 @@ if (get_request_method() === 'OPTIONS') {
 
 $router = new RouteCollector();
 
+$router->filter('auth', function(){
+    $jwt = jwt\get_bearer_token();
+    if (empty($jwt)) {
+        header('HTTP/1.0 401 Unauthorized');
+        return false;
+    }
+});
+
 $router->get('/articles', function (): array {
 
-    $q = get_query_var('q', '');
-    $tags = get_query_var('tags', []);
-    $page = max(get_query_var('page', 1), 1);
-    $order = get_query_var('sort', 'default');
+    $q = request\get_var('q', '');
+    $tags = request\get_var('tags', []);
+    $page = max(request\get_var('page', 1), 1);
+    $order = request\get_var('sort', 'default');
     $itemsPerPage = 20;
 
-    $articles = find_all_articles($q, $tags, $order, $page, $itemsPerPage);
-    $totalCount = find_found_rows();
-    $paging = get_paging($totalCount, $page, $itemsPerPage);
+    $articles = db\article\find_all($q, $tags, $order, $page, $itemsPerPage);
+    $totalCount = db\article\found_rows();
+    $paging = db\article\paging($totalCount, $page, $itemsPerPage);
 
     return [
         'articles' => $articles,
@@ -41,125 +48,72 @@ $router->get('/articles', function (): array {
 });
 
 $router->get('/articles/{id}', function (int $id): array {
-    $article = find_one_article($id);
-    update_article_views($id);
+    $article = db\article\find_one($id);
+    db\article\update_views($id);
     return $article;
 });
 
 $router->post('/add-article', function (): array {
-    $data = get_php_input();
-    $errors = validate_article($data);
+    $data = request\php_input();
+    $errors = db\article\validate($data);
     if (empty($errors)) {
-        add_article($data);
+        db\article\add($data);
         return ['success' => true];
     }
     return [
         'success' => false,
         'errors' => $errors
     ];
-});
+}, ['before' => 'auth']);
 
 $router->get('/selectedtags', function (): array {
-    $q = get_query_var('q', '');
-    $tags = get_query_var('tags', []);
-    $selected = find_selected_tags($q, $tags);
+    $q = request\get_var('q', '');
+    $tags = request\get_var('tags', []);
+    $selected = db\tag\find_selected_tags($q, $tags);
     return $selected;
 });
 
 $router->get('/tags', function (): array {
-    $sort = get_query_var('sort', 'name');
-    return find_all_tags($sort);
+    $sort = request\get_var('sort', 'name');
+    return db\tag\find_all($sort);
 });
 
 $router->get('/tags/{id}', function (int $id): array {
-    return find_one_tag($id);
+    return db\tag\find_one($id);
 });
 
 $router->get('/popular', function (): array {
-    return find_selected_articles(['views' => 'DESC']);
+    return db\article\find_selected(['id', 'title', 'abstract', 'views'], ['views' => 'DESC']);
 });
 
 $router->get('/latest', function (): array {
-    return find_selected_articles(['created' => 'DESC']);
+    return db\article\find_selected(['id', 'title', 'abstract', 'created'], ['created' => 'DESC']);
 });
 
 $router->get('/modified', function (): array {
-    return find_selected_articles(['modified' => 'DESC']);
+    return db\article\find_selected(['id', 'title', 'abstract', 'modified'], ['modified' => 'DESC']);
 });
 
 $router->post('/auth/login', function (): array {
-    $data = get_php_input();
-    $errors = validate_login($data);
+    $data = request\php_input();
+    $errors = db\user\validate_credentials($data);
     if (empty($errors)) {
-        $user = auth_user($data['username'], $data['password']);
+        $user = db\user\authenticate($data['username'], $data['password']);
         if (empty($user)) {
             $errors['form'] = 'Benutzername oder Passwort ungültig';
         } else {
-            $token = generate_token($user);
-            return [
-                'token' => $token
-            ];
+            $token = jwt\generate_token($user);
+            return ['token' => $token];
         }
     }
-    return [
-        'errors' => $errors
-    ];
-});
-
-$router->post('/auth/logout', function (): array {
-    auth_logout();
-    return [
-        true
-    ];
-});
-
-function validate_login(array $data): array
-{
-    $errors = [];
-    if (empty($data['username'])) {
-        $errors['username'] = 'Benutzername fehlt';
-    }
-    if (empty($data['password'])) {
-        $errors['password'] = 'Passwort fehlt';
-    }
+    header('HTTP/1.0 400 Validation failed');
     return $errors;
-}
+});
 
-function auth_logout(string $token)
-{
-}
-
-function auth_user(string $username, string $password): array
-{
-    $user = find_user($username);
-    if (!empty($user)) {
-        if (validate_password($password, $user)) {
-            return $user;
-        }
-    }
-    return [];
-}
-
-function generate_token(array $user): string
-{
-    return 'generated_token';
-}
-
-function find_user(string $username): array
-{
-    $user = get_database()->get('users', '*', [
-        'username' => $username,
-        'deleted' => 0
-    ]);
-    if (empty($user)) {
-        return [];
-    }
-    return $user;
-}
 
 try {
     $dispatcher = new Dispatcher($router->getData());
-    $response = $dispatcher->dispatch(get_request_method(), get_url_path());
+    $response = $dispatcher->dispatch(request\method(), request\url_path());
     header('Access-Control-Allow-Origin: *');
     echo json_encode($response);
 

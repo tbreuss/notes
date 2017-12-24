@@ -11,5 +11,15 @@
   },
   "scripts": {
     "run": "php -S localhost:9999 -t ./public"
+  },
+  "autoload": {
+    "files": [
+      "src/common.php",
+      "src/jwt.php",
+      "src/request.php",
+      "src/db/article.php",
+      "src/db/tag.php",
+      "src/db/user.php"
+    ]
   }
 }
