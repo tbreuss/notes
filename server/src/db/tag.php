@@ -2,7 +2,9 @@
 
 namespace db\tag;
 
-use common;
+use function common\{
+    medoo, pdo
+};
 
 function find_all(string $sort): array
 {
@@ -14,13 +16,13 @@ function find_all(string $sort): array
         'default' => ['name' => 'ASC']
     ];
     $order = isset($orders[$sort]) ? $orders[$sort] : $orders['default'];
-    $articles = common\medoo()->select('tags', ['id', 'name', 'frequency'], ['ORDER' => $order]);
+    $articles = medoo()->select('tags', ['id', 'name', 'frequency'], ['ORDER' => $order]);
     return $articles;
 }
 
 function find_one(int $id): array
 {
-    $article = common\medoo()->get('tags', '*', ['id' => $id]);
+    $article = medoo()->get('tags', '*', ['id' => $id]);
     return $article;
 }
 
@@ -34,7 +36,7 @@ function save_all(string $strtags, array $user)
 
 function save_one(string $tag, array $user): int
 {
-    $medoo = common\medoo();
+    $medoo = medoo();
     $id = $medoo->get('tags', 'id', [
         'name' => $tag
     ]);
@@ -90,7 +92,7 @@ function find_selected_tags(string $q, array $tags): array
 		LIMIT 40
 	';
 
-    $stmt = common\pdo()->prepare($sql);
+    $stmt = pdo()->prepare($sql);
     $stmt->execute($params);
     $tags = $stmt->fetchAll(\PDO::FETCH_COLUMN);
 

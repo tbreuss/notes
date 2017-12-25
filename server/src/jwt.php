@@ -2,8 +2,10 @@
 
 namespace jwt;
 
-use common;
 use Firebase\JWT\JWT as FirebaseJWT;
+use function common\{
+    config
+};
 
 /**
  * @see https://stackoverflow.com/questions/40582161/how-to-properly-use-bearer-tokens
@@ -50,7 +52,7 @@ function generate_token(array $user): string
             'name' => $user['username']
         ]
     );
-    $key = common\config('jwt_private_key');
+    $key = config('jwt_private_key');
     $jwt = FirebaseJWT::encode($payload, $key, 'HS256');
     return $jwt;
 }
@@ -58,6 +60,6 @@ function generate_token(array $user): string
 function get_user_from_token(): array
 {
     $jwt = get_bearer_token();
-    $decoded = FirebaseJWT::decode($jwt, common\config('jwt_private_key'), array('HS256'));
+    $decoded = FirebaseJWT::decode($jwt, config('jwt_private_key'), array('HS256'));
     return (array)$decoded->user;
 }

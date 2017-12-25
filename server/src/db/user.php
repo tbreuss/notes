@@ -2,7 +2,9 @@
 
 namespace db\user;
 
-use common;
+use function common\{
+    medoo
+};
 
 function authenticate(string $username, string $password): array
 {
@@ -17,7 +19,7 @@ function authenticate(string $username, string $password): array
 
 function find_one(string $username): array
 {
-    $user = common\medoo()->get('users', '*', [
+    $user = medoo()->get('users', '*', [
         'username' => $username,
         'deleted' => 0
     ]);

@@ -25,7 +25,7 @@ $router->filter('auth', function(){
     $jwt = jwt\get_bearer_token();
     if (empty($jwt)) {
         header('HTTP/1.0 401 Unauthorized');
-        return false;
+        exit;
     }
 });
 

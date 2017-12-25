@@ -2,22 +2,24 @@
 
 namespace db\article;
 
-use common;
-use jwt;
 use db\tag;
+use jwt;
+use function common\{
+    medoo, pdo
+};
 
 function find_selected(array $fields, array $order): array
 {
     $where = [];
     $where['ORDER'] = $order;
     $where['LIMIT'] = 5;
-    $articles = common\medoo()->select('articles', $fields, $where);
+    $articles = medoo()->select('articles', $fields, $where);
     return $articles;
 }
 
 function find_one(int $id, bool $throwException = true): array
 {
-    $article = common\medoo()->get('articles', '*', ['id' => $id]);
+    $article = medoo()->get('articles', '*', ['id' => $id]);
     if ($throwException && empty($article)) {
         throw new \Exception('Not found');
     }
@@ -28,7 +30,7 @@ function find_one(int $id, bool $throwException = true): array
 
 function increase_views(int $id): int
 {
-    $data = common\medoo()->update('articles', ['views[+]' => 1], ['id' => $id]);
+    $data = medoo()->update('articles', ['views[+]' => 1], ['id' => $id]);
     return $data->rowCount();
 }
 
@@ -39,8 +41,8 @@ function insert(array $data): int
     $data['created'] = date('Y-m-d H:i:s');
     $data['created_user'] = $user['id'];
     $data['tags'] = sanitize_tags($data['tags']);
-    common\medoo()->insert('articles', $data);
-    $id = common\medoo()->id();
+    medoo()->insert('articles', $data);
+    $id = medoo()->id();
     tag\save_all($data['tags'], $user);
     return $id;
 }
@@ -97,7 +99,7 @@ function find_all(string $q, array $tags, string $order, int $page, int $itemsPe
 
     $sql .= ' LIMIT ' . ($page - 1) * $itemsPerPage . ', ' . $itemsPerPage;
 
-    $stmt = common\pdo()->prepare($sql);
+    $stmt = pdo()->prepare($sql);
     $stmt->execute($params);
 
     $articles = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -112,7 +114,7 @@ function find_all(string $q, array $tags, string $order, int $page, int $itemsPe
 function found_rows(): int
 {
     $sql = 'SELECT FOUND_ROWS()';
-    $stmt = common\pdo()->prepare($sql);
+    $stmt = pdo()->prepare($sql);
     $stmt->execute();
     $foundRows = $stmt->fetchColumn();
     return $foundRows;
