@@ -58,12 +58,11 @@ $router->post('/add-article', function (): array {
     $errors = db\article\validate($data);
     if (empty($errors)) {
         db\article\insert($data);
-        return ['success' => true];
+        header('HTTP/1.0 201 Created');
+        return [];
     }
-    return [
-        'success' => false,
-        'errors' => $errors
-    ];
+    header('HTTP/1.0 400 Validation failed');
+    return $errors;
 }, ['before' => 'auth']);
 
 $router->get('/selectedtags', function (): array {
