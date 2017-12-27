@@ -93,16 +93,16 @@ $router->get('/modified', function (): array {
     return db\article\find_selected(['id', 'title', 'abstract', 'modified'], ['modified' => 'DESC']);
 });
 
-$router->post('/auth/login', function (): array {
+$router->post('/auth/login', function () {
     $data = request\php_input();
     $errors = db\user\validate_credentials($data);
     if (empty($errors)) {
         $user = db\user\authenticate($data['username'], $data['password']);
         if (empty($user)) {
-            $errors['form'] = 'Benutzername oder Passwort ungültig';
+            $errors['password'] = 'Benutzername oder Passwort ungültig';
         } else {
             $token = jwt\generate_token($user);
-            return ['token' => $token];
+            return $token;
         }
     }
     header('HTTP/1.0 400 Validation failed');
