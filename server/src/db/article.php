@@ -34,7 +34,6 @@ function increase_views(int $id): int
     return $data->rowCount();
 }
 
-
 function insert(array $data): int
 {
     $user = jwt\get_user_from_token();
@@ -45,6 +44,19 @@ function insert(array $data): int
     $id = medoo()->id();
     tag\save_all($data['tags'], $user);
     return $id;
+}
+
+function update($id, array $data): int
+{
+    $old = find_one($id, true);
+
+    $user = jwt\get_user_from_token();
+    $data['modified'] = date('Y-m-d H:i:s');
+    $data['modified_user'] = $user['id'];
+    $data['tags'] = sanitize_tags($data['tags']);
+    medoo()->update('articles', $data, ['id' => $id]);
+    #tag\save_all($data['tags'], $user);
+    return true;
 }
 
 function validate(array $data): array

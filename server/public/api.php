@@ -10,7 +10,7 @@ use Phroute\Phroute\Dispatcher;
 use Phroute\Phroute\Exception\HttpRouteNotFoundException;
 use Phroute\Phroute\RouteCollector;
 
-//sleep(1);
+#sleep(1);
 
 if (request\method() === 'OPTIONS') {
     header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
@@ -58,6 +58,18 @@ $router->post('/add-article', function (): array {
     $errors = db\article\validate($data);
     if (empty($errors)) {
         db\article\insert($data);
+        header('HTTP/1.0 201 Created');
+        return [];
+    }
+    header('HTTP/1.0 400 Validation failed');
+    return $errors;
+}, ['before' => 'auth']);
+
+$router->put('/articles/{id}', function (int $id): array {
+    $data = request\php_input();
+    $errors = db\article\validate($data);
+    if (empty($errors)) {
+        db\article\update($id, $data);
         header('HTTP/1.0 201 Created');
         return [];
     }
