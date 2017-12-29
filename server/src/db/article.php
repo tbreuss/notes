@@ -59,6 +59,25 @@ function update($id, array $data): int
     return true;
 }
 
+function delete($id)
+{
+    $article = find_one($id, true);
+    $user = jwt\get_user_from_token();
+
+    foreach ($article['tags'] as $tag) {
+        medoo()->update('tags', [
+            'frequency[-]' => 1,
+            'modified' => date('Y-m-d H:i:s'),
+            'modified_user' => $user['id']
+        ], [
+            'name' => $tag
+        ]);
+    }
+    medoo()->delete('tags', ['frequency[<=]' => 0]);
+    medoo()->delete('articles', ['id' => $id]);
+    return true;
+}
+
 function validate(array $data): array
 {
     $errors = [];

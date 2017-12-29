@@ -77,6 +77,10 @@ $router->put('/articles/{id}', function (int $id): array {
     return $errors;
 }, ['before' => 'auth']);
 
+$router->delete('/articles/{id}', function (int $id) {
+    db\article\delete($id);
+}, ['before' => 'auth']);
+
 $router->get('/selectedtags', function (): array {
     $q = request\get_var('q', '');
     $tags = request\get_var('tags', []);
