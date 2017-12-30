@@ -49,7 +49,8 @@ function generate_token(array $user): string
         //"exp" => time() + (60*60*24),
         'user' => [
             'id' => $user['id'],
-            'name' => $user['username']
+            'name' => $user['username'],
+            'role' => $user['role']
         ]
     );
     $key = config('jwt_private_key');
