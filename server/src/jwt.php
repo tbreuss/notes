@@ -61,6 +61,9 @@ function generate_token(array $user): string
 function get_user_from_token(): array
 {
     $jwt = get_bearer_token();
+    if (empty($jwt)) {
+        return [];
+    }
     $decoded = FirebaseJWT::decode($jwt, config('jwt_private_key'), array('HS256'));
     return (array)$decoded->user;
 }

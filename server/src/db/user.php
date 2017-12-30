@@ -17,6 +17,23 @@ function authenticate(string $username, string $password): array
     return [];
 }
 
+function find_all(string $sort): array
+{
+    $orders = [
+        #'name' => ['name' => 'ASC'],
+        #'frequency' => ['frequency' => 'DESC', 'name' => 'ASC'],
+        #'changed' => ['modified' => 'DESC', 'name' => 'ASC'],
+        #'created' => ['created' => 'DESC', 'name' => 'ASC'],
+        'default' => ['name' => 'ASC']
+    ];
+    $order = isset($orders[$sort]) ? $orders[$sort] : $orders['default'];
+    $articles = medoo()->select('users', ['id', 'name', 'article_likes', 'article_views', 'lastlogin', 'created', 'modified'], [
+        'deleted' => 0,
+        'ORDER' => $order
+    ]);
+    return $articles;
+}
+
 function find_one(string $username): array
 {
     $user = medoo()->get('users', '*', [

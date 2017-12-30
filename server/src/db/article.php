@@ -5,7 +5,7 @@ namespace db\article;
 use db\tag;
 use jwt;
 use function common\{
-    medoo, pdo
+    medoo, pdo, array_iunique
 };
 
 function find_selected(array $fields, array $order): array
@@ -15,6 +15,19 @@ function find_selected(array $fields, array $order): array
     $where['LIMIT'] = 5;
     $articles = medoo()->select('articles', $fields, $where);
     return $articles;
+}
+
+function find_all_tags()
+{
+    $columns = medoo()->select('articles', 'tags');
+    $tags = [];
+    foreach ($columns as $strTags) {
+        $arrTags = explode(',', $strTags);
+        $tags = array_merge($tags, $arrTags);
+    }
+    $tags = array_iunique($tags);
+    sort($tags);
+    return $tags;
 }
 
 function find_one(int $id, bool $throwException = true): array
@@ -29,6 +42,12 @@ function find_one(int $id, bool $throwException = true): array
 
 function increase_views(int $id): int
 {
+    $user = jwt\get_user_from_token();
+    medoo()->insert('article_views', [
+        'article_id' => $id,
+        'user_id' => $user['id'] ?? null,
+        'created' => date('Y-m-d H:i:s')
+    ]);
     $data = medoo()->update('articles', ['views[+]' => 1], ['id' => $id]);
     return $data->rowCount();
 }
@@ -37,7 +56,7 @@ function insert(array $data): int
 {
     $user = jwt\get_user_from_token();
     $data['created'] = date('Y-m-d H:i:s');
-    $data['created_user'] = $user['id'];
+    $data['created_by'] = $user['id'];
     $data['tags'] = sanitize_tags($data['tags']);
     medoo()->insert('articles', $data);
     $id = medoo()->id();
@@ -51,7 +70,7 @@ function update($id, array $data): int
 
     $user = jwt\get_user_from_token();
     $data['modified'] = date('Y-m-d H:i:s');
-    $data['modified_user'] = $user['id'];
+    $data['modified_by'] = $user['id'];
     $data['tags'] = sanitize_tags($data['tags']);
     medoo()->update('articles', $data, ['id' => $id]);
     #tag\save_all($data['tags'], $user);
@@ -67,7 +86,7 @@ function delete($id)
         medoo()->update('tags', [
             'frequency[-]' => 1,
             'modified' => date('Y-m-d H:i:s'),
-            'modified_user' => $user['id']
+            'modified_by' => $user['id']
         ], [
             'name' => $tag
         ]);
@@ -82,9 +101,6 @@ function validate(array $data): array
     $errors = [];
     if (empty($data['title'])) {
         $errors['title'] = 'Bitte einen Titel eingeben';
-    }
-    if (empty($data['abstract'])) {
-        $errors['abstract'] = 'Bitte einen Abstract eingeben';
     }
     if (empty($data['content'])) {
         $errors['content'] = 'Bitte einen Content eingeben';

@@ -44,7 +44,7 @@ function save_one(string $tag, array $user): int
         $medoo->update('tags', [
             'frequency[+]' => 1,
             'modified' => date('Y-m-d H:i:s'),
-            'modified_user' => $user['id']
+            'modified_by' => $user['id']
         ], [
             'id' => $id
         ]);
@@ -54,7 +54,7 @@ function save_one(string $tag, array $user): int
             'name' => $tag,
             'frequency' => 1,
             'created' => date('Y-m-d H:i:s'),
-            'created_user' => $user['id']
+            'created_by' => $user['id']
         ]);
         return $medoo->id();
     }

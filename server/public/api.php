@@ -30,13 +30,18 @@ try {
 
 } catch (HttpRouteNotFoundException $e) {
 
+    header('Access-Control-Allow-Origin: *');
     header('HTTP/1.0 404 Not Found');
     echo json_encode(['error' => $e->getMessage()]);
 
 } catch (\Exception $e) {
 
+    header('Access-Control-Allow-Origin: *');
     header('HTTP/1.0 500');
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode([
+        'error' => $e->getMessage(),
+        'trace' => $e->getTraceAsString()
+    ]);
 
 }
 
@@ -109,6 +114,11 @@ function get_router()
         $tags = request\get_var('tags', []);
         $selected = db\tag\find_selected_tags($q, $tags);
         return $selected;
+    });
+
+    $router->get('/users', function (): array {
+        $sort = request\get_var('sort', 'name');
+        return db\user\find_all($sort);
     });
 
     $router->get('/tags', function (): array {
