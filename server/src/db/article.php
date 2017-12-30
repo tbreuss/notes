@@ -24,7 +24,6 @@ function find_one(int $id, bool $throwException = true): array
         throw new \Exception('Not found');
     }
     $article['tags'] = explode(',', $article['tags']);
-    $article = handle_custom_tags($article, 'content');
     return $article;
 }
 
@@ -159,36 +158,6 @@ function paging(int $totalCount, int $currentPage, int $itemsPerPage): array
         'currentPage' => $currentPage,
         'pageCount' => ceil($totalCount / $itemsPerPage)
     ];
-}
-
-// todo: replace this in database
-function handle_custom_tags(array $article, string $key): array
-{
-    $content = $article[$key];
-
-    $replacements = [
-        '<css>' => "``` css",
-        '</css>' => "```",
-        '<html>' => "``` html",
-        '</html>' => "```",
-        '<javascript>' => "``` javascript",
-        '</javascript>' => "```",
-        '<php>' => "``` php",
-        '</php>' => "```",
-        '<shell>' => "``` shell",
-        '</shell>' => "```",
-        '<sql>' => "``` sql",
-        '</sql>' => "```",
-        '<text>' => "``` text",
-        '</text>' => "```",
-        '<typoscript>' => "``` typoscript",
-        '</typoscript>' => "```",
-    ];
-
-    $content = str_replace(array_keys($replacements), array_values($replacements), $content);
-
-    $article[$key] = $content;
-    return $article;
 }
 
 function sanitize_tags(string $strtags): string
