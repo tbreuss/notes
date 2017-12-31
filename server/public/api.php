@@ -97,8 +97,12 @@ function get_router()
         $data = request\php_input();
         $errors = db\article\validate($data);
         if (empty($errors)) {
-            db\article\update($id, $data);
-            header('HTTP/1.0 201 Created');
+            $updated = db\article\update($id, $data);
+            if ($updated) {
+                header('HTTP/1.0 201 Created');
+            } else {
+                header('HTTP/1.0 200 Ok');
+            }
             return [];
         }
         header('HTTP/1.0 400 Validation failed');

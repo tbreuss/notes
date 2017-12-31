@@ -66,13 +66,39 @@ function insert(array $data): int
 
 function update($id, array $data): int
 {
-    $old = find_one($id, true);
     $user = jwt\get_user_from_token();
+    $old = find_one($id, true);
+
+    if (is_identic($old, $data)) {
+        return 0;
+    }
+
     $data['modified'] = date('Y-m-d H:i:s');
     $data['modified_by'] = $user['id'];
     $data['tags'] = sanitize_tags($data['tags']);
     medoo()->update('articles', $data, ['id' => $id]);
     tag\update_all($old['tags'], explode(',', $data['tags']), $user);
+    return 1;
+}
+
+function is_identic(array $old, array $new)
+{
+    if (strcmp($old['title'], $new['title']) !== 0) {
+        return false;
+    }
+    if (strcmp($old['abstract'], $new['abstract']) !== 0) {
+        return false;
+    }
+    if (strcmp($old['content'], $new['content']) !== 0) {
+        return false;
+    }
+
+    $arrNewTags = explode(',',$new['tags']);
+    $diff1 = array_udiff($old['tags'], $arrNewTags, "strcasecmp");
+    $diff2 = array_udiff($arrNewTags, $old['tags'], "strcasecmp");
+    if (!empty($diff1) || !empty($diff2)) {
+        return false;
+    }
     return true;
 }
 
