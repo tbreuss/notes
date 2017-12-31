@@ -17,6 +17,7 @@
       "src/common.php",
       "src/jwt.php",
       "src/request.php",
+      "src/response.php",
       "src/db/article.php",
       "src/db/tag.php",
       "src/db/user.php"

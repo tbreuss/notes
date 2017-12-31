@@ -36,8 +36,9 @@ try {
 
 } catch (\Exception $e) {
 
+    $code = empty($e->getCode()) ? 500 : $e->getCode();
     header('Access-Control-Allow-Origin: *');
-    header('HTTP/1.0 500');
+    header('HTTP/1.0 ' . $code);
     echo json_encode([
         'error' => $e->getMessage(),
         'trace' => $e->getTraceAsString()
@@ -161,6 +162,58 @@ function get_router()
         header('HTTP/1.0 400 Validation failed');
         return $errors;
     });
+
+    $router->post('/upload', function () {
+
+        $user = jwt\get_user_from_token();
+
+        if (empty($_FILES['file'])) {
+            throw new \Exception('No file uploaded', 400);
+        }
+
+        $fileEndings = [
+            'image/jpeg' => 'jpg',
+            'image/jpg' => 'jpg',
+            'image/gif' => 'gif',
+            'image/png' => 'png'
+        ];
+
+        $file = $_FILES['file'];
+
+        if ($file['error'] > 0) {
+            throw new \Exception('An error occured', 400);
+        }
+
+        if (!in_array($file['type'], array_keys($fileEndings))) {
+            throw new \Exception('Invalid file type', 400);
+        }
+
+        if ($file['size'] > 1000000) {
+            throw new \Exception('File size to big', 400);
+        }
+
+        $basename = md5_file($file['tmp_name']);
+        if ($basename === false) {
+            throw new \Exception('Could not create md5 sum', 400);
+        }
+
+        $pathname = sprintf('media/%s/', $user['id']);
+        if (!is_dir($pathname)) {
+            mkdir($pathname);
+        }
+
+        $filename = $pathname . $basename . '.' . $fileEndings[$file['type']];
+
+        if (!move_uploaded_file($file['tmp_name'], $filename)) {
+            throw new \Exception('Could not move uploaded file', 400);
+        }
+
+        return [
+            'name' => $file['name'],
+            'location' => '/' . $filename
+        ];
+
+    }, ['before' => 'auth']);
 
     return $router;
 }
