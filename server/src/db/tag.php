@@ -26,6 +26,42 @@ function find_one(int $id): array
     return $article;
 }
 
+function update_all(array $oldTags, array $newTags, array $user)
+{
+    $medoo = medoo();
+
+    $tagsToRemove = array_udiff($oldTags, $newTags, "strcasecmp");
+    $tagsToAdd = array_udiff($newTags, $oldTags, "strcasecmp");
+
+    foreach ($tagsToRemove as $tag) {
+        $medoo->update('tags', [
+            'frequency[-]' => 1,
+            'modified' => date('Y-m-d H:i:s'),
+            'modified_by' => $user['id']
+        ], [
+            'name' => $tag
+        ]);
+    }
+
+    foreach ($tagsToAdd as $tag) {
+        $medoo->insert('tags', [
+            'name' => $tag,
+            'frequency' => 1,
+            'created' => date('Y-m-d H:i:s'),
+            'created_by' => $user['id']
+        ]);
+    }
+
+    delete_all_unused();
+}
+
+function delete_all_unused()
+{
+    medoo()->delete('tags', [
+        'frequency[<=]' => 0
+    ]);
+}
+
 function save_all(string $strtags, array $user)
 {
     $tags = explode(',', $strtags);

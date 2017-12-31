@@ -67,31 +67,20 @@ function insert(array $data): int
 function update($id, array $data): int
 {
     $old = find_one($id, true);
-
     $user = jwt\get_user_from_token();
     $data['modified'] = date('Y-m-d H:i:s');
     $data['modified_by'] = $user['id'];
     $data['tags'] = sanitize_tags($data['tags']);
     medoo()->update('articles', $data, ['id' => $id]);
-    #tag\save_all($data['tags'], $user);
+    tag\update_all($old['tags'], explode(',', $data['tags']), $user);
     return true;
 }
 
 function delete($id)
 {
-    $article = find_one($id, true);
     $user = jwt\get_user_from_token();
-
-    foreach ($article['tags'] as $tag) {
-        medoo()->update('tags', [
-            'frequency[-]' => 1,
-            'modified' => date('Y-m-d H:i:s'),
-            'modified_by' => $user['id']
-        ], [
-            'name' => $tag
-        ]);
-    }
-    medoo()->delete('tags', ['frequency[<=]' => 0]);
+    $article = find_one($id, true);
+    tag\update_all($article['tags'], [], $user);
     medoo()->delete('articles', ['id' => $id]);
     return true;
 }
@@ -180,5 +169,6 @@ function sanitize_tags(string $strtags): string
 {
     $tags = explode(',', $strtags);
     $sanitized = array_map('trim', $tags);
+    $sanitized = array_iunique($sanitized);
     return implode(',', $sanitized);
 }
