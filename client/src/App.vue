@@ -1,34 +1,22 @@
 <template>
-    <div id="app" class="container">
-        <header class="header clearfix">
-            <nav>
-                <ul class="nav nav-pills float-right">
-                    <li class="nav-item">
-                        <router-link class="nav-link" to="/articles">Einträge</router-link>
-                    </li>
-                    <li class="nav-item">
-                        <router-link class="nav-link" to="/tags">Tags</router-link>
-                    </li>
-                    <li class="nav-item">
-                        <router-link class="nav-link" to="/articles/add">Neu</router-link>
-                    </li>
-                    <li class="nav-item">
-                        <router-link v-if="loggedIn" to="/logout" class="nav-link">Logout</router-link>
-                        <router-link v-if="!loggedIn" to="/login" class="nav-link">Login</router-link>
-                    </li>
-                </ul>
-            </nav>
-            <h3 class="text-muted">
-                <router-link to="/">Notes</router-link>
-            </h3>
-        </header>
-        <main role="main">
-            <router-view/>
-        </main>
-        <footer class="footer">
-
-        </footer>
-    </div>
+    <el-container>
+        <el-header height="165px">
+            <el-menu :default-active="'/articles'" :router="true" class="el-menu" mode="horizontal">
+                <el-menu-item index="/articles">Einträge</el-menu-item>
+                <el-menu-item index="/tags">Tags</el-menu-item>
+                <el-menu-item index="/articles/add">Neuer Eintrag</el-menu-item>
+                <el-menu-item v-if="loggedIn" index="/logout">Logout</el-menu-item>
+                <el-menu-item v-if="!loggedIn" index="/login">Login</el-menu-item>
+            </el-menu>
+        </el-header>
+        <el-container class="main-container">
+            <el-main>
+                <router-view/>
+            </el-main>
+        </el-container>
+        <el-footer class="footer" height="240px">
+        </el-footer>
+    </el-container>
 </template>
 
 <script>
@@ -47,5 +35,31 @@
   }
 </script>
 
-<style scoped>
+<style>
+    .main-container {
+        max-width: 1170px;
+    }
+    .el-menu {
+        background-color: transparent;
+        margin-top:80px;
+    }
+    .el-menu li {
+        background-color: rgba(255, 255, 255, .8);
+    }
+    .el-menu--horizontal {
+        border-bottom: none;
+    }
+    .el-header {
+        background-color: #f5f5f6;
+        height: 165px;
+        margin-bottom: 30px;
+        background-image: url(https://www.team.jobs/Img/header_enterprises.jpg)
+    }
+    .el-menu-dem {
+        background-color: #f5f5f6;
+    }
+    .footer {
+        background-color: #F6F7F9;
+    }
+
 </style>

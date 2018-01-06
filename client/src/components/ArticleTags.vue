@@ -1,6 +1,6 @@
 <template>
-    <div v-cloak>
-        <span v-for="tag in tags"><span class="badge badge-secondary">{{ tag }}</span>&nbsp;</span>
+    <div class="list-group__tags">
+        <el-tag v-for="tag in tags" type="info" :key="tag.id"><span class="badge badge-secondary">{{ tag }}</span>&nbsp;</el-tag>
     </div>
 </template>
 

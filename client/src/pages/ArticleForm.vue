@@ -1,72 +1,98 @@
 <template>
-    <div>
-        <h4 v-if="id>0">Eintrag bearbeiten</h4>
-        <h4 v-else>Eintrag hinzufügen</h4>
-        <div class="loading" v-if="loading">
-            Lade...
-        </div>
-        <div v-else>
-            <div class="form-group">
-                <label for="title">Titel</label>
-                <input v-model="article.title" type="text" :class="getClass('title')" id="title" v-focus>
-                <div class="invalid-feedback">{{ errors.title }}</div>
+    <el-container>
+        <el-main>
+            <h1 v-if="id>0">Eintrag bearbeiten</h1>
+            <h1 v-else>Eintrag hinzufügen</h1>
+            <div class="loading" v-if="loading">
+                Lade...
             </div>
-            <div class="form-group">
-                <label for="abstract">Abstract</label>
-                <textarea v-model="article.abstract" :class="getClass('abstract')" id="abstract"></textarea>
-                <div class="invalid-feedback">{{ errors.abstract }}</div>
-            </div>
-            <div class="form-group">
-                <label for="content">Content</label>
-                <textarea-upload :url="'/upload'" v-model="article.content" :class="getClass('content')" id="content" rows="10"
-                                 cols="10"></textarea-upload>
+            <div v-else>
+                <el-form ref="form" :model="article" label-width="120px">
+                    <el-form-item label="Titel">
+                        <el-input v-model="article.title"></el-input>
+                    </el-form-item>
+                    <el-form-item label="Abstract">
+                        <el-input type="textarea" v-model="article.abstract"></el-input>
+                    </el-form-item>
+                    <el-form-item label="Content">
+                        <el-input type="textarea" v-model="article.content" :rows="10"></el-input>
+                    </el-form-item>
+                    <el-form-item label="Tags">
+                        <el-input v-model="article.tags"></el-input>
+                    </el-form-item>
+                    <el-form-item v-if="id==0">
+                        <el-button type="primary" @click="save" :disabled="disabled">Speichern</el-button>
+                        <el-button v-show="id==0" type="secondary" @click="reset" :disabled="disabled">Zurücksetzen</el-button>
+                    </el-form-item>
+                    <el-form-item v-else>
+                        <el-button type="primary" @click="save" :disabled="disabled">Speichern</el-button>
+                        <el-button type="secondary" data-toggle="modal" data-target="#deleteDialog">Löschen</el-button>
+                        <el-button type="secondary" @click="cancel">Abbrechen</el-button>
+                    </el-form-item>
+                </el-form>
+                {{ errors }}
+                <!--
+                <div class="form-group">
+                    <label for="title">Titel</label>
+                    <input v-model="article.title" type="text" :class="getClass('title')" id="title" v-focus>
+                    <div class="invalid-feedback">{{ errors.title }}</div>
+                </div>
+                <div class="form-group">
+                    <label for="abstract">Abstract</label>
+                    <textarea v-model="article.abstract" :class="getClass('abstract')" id="abstract"></textarea>
+                    <div class="invalid-feedback">{{ errors.abstract }}</div>
+                </div>
+                <div class="form-group">
+                    <label for="content">Content</label>
+                    <textarea-upload :url="'/upload'" v-model="article.content" :class="getClass('content')" id="content" rows="10"
+                                     cols="10"></textarea-upload>
 
-                <small class="float-right">
-                    <button type="button" class="btn btn-sm btn-link" data-toggle="modal" data-target="#previewModal">
-                        Vorschau
-                    </button>
-                </small>
-                <small id="contentHelp" class="form-text text-muted">Markdown-Syntax</small>
-                <div class="invalid-feedback">{{ errors.content }}</div>
-            </div>
-            <div class="form-group">
-                <label for="tags">Tags</label>
-                <input v-model="article.tags" type="text" :class="getClass('tags')" id="tags">
-                <small id="tagsHelp" class="form-text text-muted">Mehrere Tags kommagetrennt</small>
-                <div class="invalid-feedback">{{ errors.tags }}</div>
-            </div>
-            <button type="button" class="btn btn-primary" @click="save" ref="submit">Speichern</button>
-            <button v-show="id>0" type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteDialog" ref="delete">Löschen</button>
-            <button v-show="id>0" type="button" class="btn btn-link" @click="cancel" ref="cancel">Abbrechen</button>
-            <button v-show="id==0" type="button" class="btn btn-link" @click="reset" ref="reset">Zurücksetzen</button>
-        </div>
-
-        <modal-dialog :id="'deleteDialog'" @confirm="deleteArticle">
-            <p slot="body">Soll der Eintrag gelöscht werden?</p>
-        </modal-dialog>
-
-        <!-- Modal -->
-        <div class="modal" id="previewModal" tabindex="-1" role="dialog" aria-labelledby="previewModalLabel"
-             aria-hidden="true">
-            <div class="modal-dialog modal-lg" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="previewModalLabel">Vorschau: {{ article.title }}</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
+                    <small class="float-right">
+                        <button type="button" class="btn btn-sm btn-link" data-toggle="modal" data-target="#previewModal">
+                            Vorschau
                         </button>
-                    </div>
-                    <div class="modal-body">
-                        <div v-if="article.content.trim()==''">Kein Content erfasst</div>
-                        <vue-markdown v-else @rendered="markdownRendered">{{ article.content }}</vue-markdown>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Schliessen</button>
+                    </small>
+                    <small id="contentHelp" class="form-text text-muted">Markdown-Syntax</small>
+                    <div class="invalid-feedback">{{ errors.content }}</div>
+                </div>
+                <div class="form-group">
+                    <label for="tags">Tags</label>
+                    <input v-model="article.tags" type="text" :class="getClass('tags')" id="tags">
+                    <small id="tagsHelp" class="form-text text-muted">Mehrere Tags kommagetrennt</small>
+                    <div class="invalid-feedback">{{ errors.tags }}</div>
+                </div>
+                -->
+
+            </div>
+
+            <modal-dialog :id="'deleteDialog'" @confirm="deleteArticle">
+                <p slot="body">Soll der Eintrag gelöscht werden?</p>
+            </modal-dialog>
+
+            <!-- Modal -->
+            <div class="modal" id="previewModal" tabindex="-1" role="dialog" aria-labelledby="previewModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="previewModalLabel">Vorschau: {{ article.title }}</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div v-if="article.content.trim()==''">Kein Content erfasst</div>
+                            <vue-markdown v-else @rendered="markdownRendered">{{ article.content }}</vue-markdown>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Schliessen</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+        </el-main>
+        <el-aside></el-aside>
+    </el-container>
 </template>
 
 <script>
@@ -84,7 +110,8 @@
           tags: ''
         },
         errors: {},
-        formSent: false
+        formSent: false,
+        disabled: false
       }
     },
     computed: {},
@@ -111,8 +138,7 @@
         }
       },
       save() {
-        this.$refs.reset.disabled = true
-        this.$refs.submit.disabled = true
+        this.disabled = true
         this.formSent = true
         let article = this.getArticle()
         if (this.id > 0) {
@@ -124,27 +150,23 @@
       insert: function (article) {
         postArticle(article)
           .then(() => {
-            this.$refs.reset.disabled = false
-            this.$refs.submit.disabled = false
+            this.disabled = false
             this.$router.push('/articles')
           })
           .catch(error => {
             this.errors = error.response.data
-            this.$refs.reset.disabled = false
-            this.$refs.submit.disabled = false
+            this.disabled = false
           })
       },
       update: function (article) {
         putArticle(this.id, article)
           .then(() => {
-            this.$refs.reset.disabled = false
-            this.$refs.submit.disabled = false
+            this.disabled = false
             this.$router.push('/articles/' + this.id)
           })
           .catch(error => {
             this.errors = error.response.data
-            this.$refs.reset.disabled = false
-            this.$refs.submit.disabled = false
+            this.disabled = false
           })
       },
       getClass: function (field) {

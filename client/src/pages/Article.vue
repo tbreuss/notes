@@ -1,28 +1,44 @@
 <template>
-    <div class="loading" v-if="loading">
-        Lade...
-    </div>
-    <div v-else>
-        <h1>{{ article.title }}</h1>
+    <el-container>
+        <el-main>
+            <div class="loading" v-if="loading">
+                Lade...
+            </div>
+            <div v-else>
 
-        <div class="content">
-            <vue-markdown :postrender="markdownPostRender" @rendered="markdownRendered">{{ article.content }}</vue-markdown>
-        </div>
-        <div class="tags">
-            <article-tags :tags="article.tags"></article-tags>
-        </div>
-        <div v-if="loggedIn" class="actions text-left">
-            <router-link :to="'/articles/' + article.id + '/update'" class="btn btn-primary">
-                Eintrag bearbeiten
-            </router-link>
-            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteDialog">
-                Eintrag löschen
-            </button>
-        </div>
-        <modal-dialog :id="'deleteDialog'" @confirm="deleteArticle">
-            <p slot="body">Soll der Eintrag gelöscht werden?</p>
-        </modal-dialog>
-    </div>
+                <h1>{{ article.title }}</h1>
+
+                <div class="content">
+                    <vue-markdown :postrender="markdownPostRender" @rendered="markdownRendered">{{ article.content }}
+                    </vue-markdown>
+                </div>
+
+                <hr>
+
+                <div class="tags">
+                    <h4>Tags</h4>
+                    <article-tags :tags="article.tags"></article-tags>
+                </div>
+
+                <el-dialog title="Tips" :visible.sync="dialogVisible" width="30%">
+                    <span>Soll der Eintrag gelöscht werden?</span>
+                    <span slot="footer" class="dialog-footer">
+                        <el-button @click="dialogVisible = false">Abbrechen</el-button>
+                        <el-button type="primary" @click="deleteArticle">Löschen</el-button>
+                    </span>
+                </el-dialog>
+
+                <div v-if="loggedIn" class="article-actions">
+                    <h4>Aktionen</h4>
+                    <el-button size="medium" type="primary" @click="$router.push('/articles/' + article.id + '/update')">Eintrag bearbeiten</el-button>
+                    <el-button size="medium" type="danger" @click="dialogVisible = true">Eintrag löschen</el-button>
+                </div>
+
+            </div>
+        </el-main>
+        <el-aside>
+        </el-aside>
+    </el-container>
 </template>
 
 <script>
@@ -34,6 +50,7 @@
     data () {
       return {
         loading: false,
+        dialogVisible: false,
         article: {}
       }
     },
@@ -52,7 +69,7 @@
       loggedIn () {
         return auth.loggedIn()
       },
-      baseUrl() {
+      baseUrl () {
         let baseUrl = 'https://kdb-api.tebe.ch/public/media/'
         if (process.env.NODE_ENV == 'development') {
           baseUrl = 'http://localhost:9999/media/'
@@ -61,7 +78,14 @@
       }
     },
     methods: {
-      deleteArticle() {
+      deleteArticle () {
+        this.dialogVisible = false
+        this.$message({
+          message: 'Artikel gelöscht',
+          type: 'success'
+        })
+        this.$router.push('/articles')
+        /*
         deleteArticle(this.id)
           .then(() => {
             this.$router.push('/articles')
@@ -69,12 +93,13 @@
           .catch(error => {
             console.error(error.response.data)
           })
+        */
       },
-      markdownPostRender(value) {
-        value = value.replace(new RegExp('src="/media/', 'g'), 'class="img-fluid" src="' + this.baseUrl);
+      markdownPostRender (value) {
+        value = value.replace(new RegExp('src="/media/', 'g'), 'class="img-fluid" src="' + this.baseUrl)
         return value
       },
-      markdownRendered() {
+      markdownRendered () {
         Prism.highlightAll()
       }
     }

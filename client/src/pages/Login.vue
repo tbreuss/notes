@@ -1,24 +1,27 @@
 <template>
-    <div>
-        <div v-if="isAuthenticated">
-            <h4>Angemeldet</h4>
-            <button type="button" @click="logout">Logout</button>
-        </div>
-        <div v-else>
-            <h4>Login</h4>
-            <div class="form-group">
-                <label for="username">Benutzername</label>
-                <input v-on:focus="reset()" v-on:keyup.enter="login" v-model="form.username" type="text" :class="getClass('username')" id="username" v-focus>
-                <div class="invalid-feedback">{{ errors.username }}</div>
+    <el-container>
+        <el-main>
+            <div v-if="isAuthenticated">
+                <h1>Angemeldet</h1>
+                <el-button type="button" @click="logout">Logout</el-button>
             </div>
-            <div class="form-group">
-                <label for="password">Passwort</label>
-                <input v-on:focus="reset()" v-on:keyup.enter="login" v-model="form.password" :class="getClass('password')" type="password" id="password">
-                <div class="invalid-feedback">{{ errors.password }}</div>
+            <div v-else>
+                <h1>Login</h1>
+                <el-form label-width="120px">
+                    <el-form-item label="Benutzername">
+                        <el-input v-model="form.username" @keyup.enter.native="login"></el-input>
+                    </el-form-item>
+                    <el-form-item label="Password">
+                        <el-input type="password" v-model="form.password" @keyup.enter.native="login"></el-input>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" @click="login" :disabled="disabled">Login</el-button>
+                    </el-form-item>
+                </el-form>
+                {{ errors }}
             </div>
-            <button type="button" class="btn btn-primary" @click="login" ref="loginBtn">Login</button>
-        </div>
-    </div>
+        </el-main>
+    </el-container>
 </template>
 
 <script>
@@ -35,15 +38,22 @@
         },
         formSent: false,
         errors: {},
-        isAuthenticated: auth.loggedIn()
+        isAuthenticated: auth.loggedIn(),
+        disabled: false
       }
     },
     methods: {
       login () {
+        this.disabled = true
         auth.login(this.form.username, this.form.password, (loggedIn, errors) => {
+          this.disabled = false
           if (!loggedIn) {
             this.errors = errors
           } else {
+            this.$message({
+              message: 'Du bist angemeldet',
+              type: 'success'
+            })
             this.$router.replace(this.$route.query.redirect || '/')
           }
           this.formSent = true
@@ -61,6 +71,8 @@
         }
         return 'form-control is-valid'
       }
+    },
+    created () {
     }
   }
 </script>

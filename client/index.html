@@ -2,19 +2,108 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <title>Notes</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css" integrity="sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy" crossorigin="anonymous">
-    <link rel="stylesheet" href="static/css/styles.css">
+    <!-- link rel="stylesheet" href="static/css/styles.css"-->
+    <style>
+      @import url(http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,300,700,800,600,400);
+      body {
+        font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 24px;
+        color: #2a2a2a;
+        margin: 0;
+      }
+      h1 {
+        font-size: 32px;
+        margin-bottom: 30px;
+        margin-top: 0;
+        font-weight: 500;
+        line-height: 1.1;
+      }
+      h2 {
+        font-size: 22px;
+        font-weight: 500;
+        color: #4c5058;
+        margin-bottom: 10px;
+        line-height: 1.1;
+      }
+      pre {
+        font-size: 14px;
+      }
+      p {
+        margin: 0 0 10px 0;
+      }
+      .list-group__item {
+        display: block;
+        padding: 0.75em 1em;
+        border-top: 1px solid #eee;
+        border-right: 1px solid #eee;
+        border-left: 1px solid #eee;
+        text-decoration: none;
+        border-collapse: collapse;
+      }
+      .list-group__item:last-child {
+        border-bottom: 1px solid #eee;
+      }
+      .list-group__item:hover {
+        background-color: #f9f9f9;
+      }
+      .list-group__item h4 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #595d64;
+        margin-top: 0;
+        margin-bottom: 10px;
+      }
+      .list-group__tags .el-tag {
+        margin-right: 0.5em;
+        padding: 0 6px;
+      }
+      .img-fluid {
+        max-width:100%;
+      }
+      .sort .el-radio__label {
+        font-size:16px;
+      }
+      .articles-sort__title {
+        color: #4c5058;
+        margin:1em 0 0 0;
+      }
+      .articles-tags__title {
+        color: #4c5058;
+        margin:1em 0 0 0;
+      }
+      .el-pagination {
+        text-align: center;
+      }
+      .articles-search input {
+        font-size: 1.4em;
+      }
+      .text-small {
+        font-size: 14px;
+        color: #838994;
+      }
+      .article-actions {
+        margin-top: 2em;
+        padding: 1em 1em;
+        background-color: #f5f2f0;
+      }
+      .article-actions h4 {
+        margin:0 0 0.5em 0;
+      }
+
+      hr {
+        margin: 2em 0;
+        border-top: 1px solid #ccc;
+      }
+    </style>
     <link rel="stylesheet" href="static/css/prism.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   </head>
   <body>
     <div id="app"></div>
     <!-- built files will be auto injected -->
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js" integrity="sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
     <script src="static/js/prism.js" data-manual></script>
   </body>
 </html>

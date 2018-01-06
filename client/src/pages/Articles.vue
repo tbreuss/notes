@@ -1,65 +1,50 @@
 <template>
-    <div v-cloak>
-        <div class="row">
-            <div class="col-lg-12">
-                <h4>Einträge</h4>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-lg-8">
-                <span v-if="articles.length>0" else>Zeige {{ pagingFrom }} bis {{ pagingTo }} von {{ paging.totalItems
-                    }} Einträgen</span>
-                <span v-if="!loading && articles.length==0">Keine Einträge gefunden</span>
-                <span class="loading" v-if="loading">
-                        ...lade Daten
-                </span>
+    <el-container>
+        <el-main>
+            <el-input class="articles-search" @change="loadData(true)" prefix-icon="el-icon-search" v-model="q" placeholder="Suchwort eingeben"></el-input>
+            <div v-loading="loading">
+                <h1>Einträge</h1>
+                <p class="text-small" v-if="articles.length>0">
+                    Zeige {{ pagingFrom }} bis {{ pagingTo }} von {{ paging.totalItems }} Einträgen
+                </p>
+                <p v-if="!loading && articles.length==0">Keine Einträge gefunden</p>
                 <div class="list-group">
                     <router-link v-for="article in articles" :to="'/articles/' + article.id"
-                                 class="list-group-item list-group-item-action" :key="article.id">
-                        {{ article.title }}<br>
+                                 class="list-group__item list-group-item-action" :key="article.id">
+                        <h4>{{ article.title }}</h4>
                         <article-tags :tags="article.tags"></article-tags>
                     </router-link>
-                    <nav style="margin-top:20px" v-if="paging.pageCount>1">
-                        <ul class="pagination justify-content-center">
-                            <li v-bind:class="{ disabled: paging.currentPage <= 1, 'page-item': true}"><a
-                                    class="page-link" @click="loadPrevPage" href="#">Vorherige Seite</a></li>
-                            <li v-bind:class="{ disabled: paging.currentPage >= paging.pageCount, 'page-item': true}">
-                                <a class="page-link" @click="loadNextPage" href="#">Nächste Seite</a></li>
-                        </ul>
-                    </nav>
+                </div>
+                <nav style="margin-top:20px" v-if="paging.pageCount>1">
+                    <ul class="pagination justify-content-center">
+                        <li v-bind:class="{ disabled: paging.currentPage <= 1, 'page-item': true}"><a
+                                class="page-link" @click="loadPrevPage" href="#">Vorherige Seite</a></li>
+                        <li v-bind:class="{ disabled: paging.currentPage >= paging.pageCount, 'page-item': true}">
+                            <a class="page-link" @click="loadNextPage" href="#">Nächste Seite</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </el-main>
+        <el-aside>
+            <div class="articles-sort">
+                <h4 class="articles-sort__title">Sortieren nach</h4>
+                <div class="articles-sort__radios">
+                    <div><el-radio v-model="sort" label="title" @change="loadData">Titel</el-radio></div>
+                    <div><el-radio v-model="sort" label="popular" @change="loadData">Beliebtheit</el-radio></div>
+                    <div><el-radio v-model="sort" label="changed" @change="loadData">Letzter Änderung</el-radio></div>
+                    <div><el-radio v-model="sort" label="created" @change="loadData">Letzter Eintrag</el-radio></div>
                 </div>
             </div>
-            <div class="col-lg-4">
-
-                Filtern nach<br>
-                <input @change="loadData(true)" type="text" v-model="q" class="form-control">
-
-                Sortieren nach<br>
-                <div class="form-check">
-                    <input class="form-check-input" id="articles-sort-radio-1" @change="loadData" type="radio" value="title" v-model="sort">
-                    <label class="form-check-label" for="articles-sort-radio-1">Titel</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" id="articles-sort-radio-2" @change="loadData" type="radio" value="popular" v-model="sort">
-                    <label class="form-check-label" for="articles-sort-radio-2">Beliebtheit</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" id="articles-sort-radio-3" @change="loadData" type="radio" value="changed" v-model="sort">
-                    <label class="form-check-label" for="articles-sort-radio-3">Letzter Änderung</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" id="articles-sort-radio-4" @change="loadData" type="radio" value="created" v-model="sort">
-                    <label class="form-check-label" for="articles-sort-radio-4">Letzter Eintrag</label>
-                </div>
-
-                Tags<br>
-                <div v-for="(tag, index) in tags" class="form-check">
-                    <input class="form-check-input" :id="'articles-tags-radio-' + index" @change="loadData" type="checkbox" :value="tag" v-model="selectedTags">
-                    <label class="form-check-label" :for="'articles-tags-radio-' + index">{{ tag }}</label>
-                </div>
+            <div class="articles-tags">
+                <h4 class="articles-tags__title">Filtern nach</h4>
+                <el-checkbox-group v-model="selectedTags" class="articles-tags__checkboxes">
+                    <div v-for="(tag, index) in tags">
+                        <el-checkbox :label="tag" @change="loadData"></el-checkbox>
+                    </div>
+                </el-checkbox-group>
             </div>
-        </div>
-    </div>
+        </el-aside>
+    </el-container>
 </template>
 
 <script>
@@ -76,7 +61,11 @@
         q: this.getQ(),
         sort: this.getSort(),
         page: this.getPage(),
-        paging: {},
+        paging: {
+          currentPage: 1,
+          itemsPerPage: 20,
+          totalItems: 0
+        },
         selectedTags: this.getSelectedTags(),
       }
     },
