@@ -50,7 +50,8 @@ function generate_token(array $user): string
         'user' => [
             'id' => $user['id'],
             'name' => $user['username'],
-            'role' => $user['role']
+            'role' => $user['role'],
+            'scopes' => json_decode($user['scopes'], true)
         ]
     );
     $key = config('jwt_private_key');
