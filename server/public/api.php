@@ -58,6 +58,33 @@ function get_router()
         }
     });
 
+    // Public
+    $router->get('/ping', function (): array {
+        return [
+            'name' => 'ch.tebe.notes',
+            'time' => date('c'),
+            // todo: determine correct version
+            'version' => '0.5'
+        ];
+    });
+
+    $router->post('/auth/login', function () {
+        $data = request\php_input();
+        $errors = db\user\validate_credentials($data);
+        if (empty($errors)) {
+            $user = db\user\authenticate($data['username'], $data['password']);
+            if (empty($user)) {
+                $errors['password'] = 'Benutzername oder Passwort ungültig';
+            } else {
+                $token = jwt\generate_token($user);
+                return $token;
+            }
+        }
+        header('HTTP/1.0 400 Validation failed');
+        return $errors;
+    });
+
+    // With Authorization
     $router->get('/articles', function (): array {
 
         $q = request\get_var('q', '');
@@ -74,13 +101,13 @@ function get_router()
             'articles' => $articles,
             'paging' => $paging
         ];
-    });
+    }, ['before' => 'auth']);
 
     $router->get('/articles/{id}', function (int $id): array {
         $article = db\article\find_one($id);
         db\article\increase_views($id);
         return $article;
-    });
+    }, ['before' => 'auth']);
 
     $router->post('/add-article', function (): array {
         $data = request\php_input();
@@ -119,49 +146,33 @@ function get_router()
         $tags = request\get_var('tags', []);
         $selected = db\tag\find_selected_tags($q, $tags);
         return $selected;
-    });
+    }, ['before' => 'auth']);
 
     $router->get('/users', function (): array {
         $sort = request\get_var('sort', 'name');
         return db\user\find_all($sort);
-    });
+    }, ['before' => 'auth']);
 
     $router->get('/tags', function (): array {
         $sort = request\get_var('sort', 'name');
         return db\tag\find_all($sort);
-    });
+    }, ['before' => 'auth']);
 
     $router->get('/tags/{id}', function (int $id): array {
         return db\tag\find_one($id);
-    });
+    }, ['before' => 'auth']);
 
     $router->get('/popular', function (): array {
         return db\article\find_selected(['id', 'title', 'abstract', 'views'], ['views' => 'DESC']);
-    });
+    }, ['before' => 'auth']);
 
     $router->get('/latest', function (): array {
         return db\article\find_selected(['id', 'title', 'abstract', 'created'], ['created' => 'DESC']);
-    });
+    }, ['before' => 'auth']);
 
     $router->get('/modified', function (): array {
         return db\article\find_selected(['id', 'title', 'abstract', 'modified'], ['modified' => 'DESC']);
-    });
-
-    $router->post('/auth/login', function () {
-        $data = request\php_input();
-        $errors = db\user\validate_credentials($data);
-        if (empty($errors)) {
-            $user = db\user\authenticate($data['username'], $data['password']);
-            if (empty($user)) {
-                $errors['password'] = 'Benutzername oder Passwort ungültig';
-            } else {
-                $token = jwt\generate_token($user);
-                return $token;
-            }
-        }
-        header('HTTP/1.0 400 Validation failed');
-        return $errors;
-    });
+    }, ['before' => 'auth']);
 
     $router->post('/upload', function () {
 
