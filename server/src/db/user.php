@@ -11,6 +11,7 @@ function authenticate(string $username, string $password): array
     $user = find_one($username);
     if (!empty($user)) {
         if (validate_password($password, $user)) {
+            update_last_login($username);
             return $user;
         }
     }
@@ -32,6 +33,11 @@ function find_all(string $sort): array
         'ORDER' => $order
     ]);
     return $articles;
+}
+
+function update_last_login(string $username)
+{
+    medoo()->update('users', ['lastlogin' => date('Y-m-d H:i:s')], ['username' => $username]);
 }
 
 function find_one(string $username): array

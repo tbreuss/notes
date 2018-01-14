@@ -40,16 +40,19 @@ function find_one(int $id, bool $throwException = true): array
     return $article;
 }
 
-function increase_views(int $id): int
+function increase_views(int $id)
 {
     $user = jwt\get_user_from_token();
-    medoo()->insert('article_views', [
+    $data = [
         'article_id' => $id,
-        'user_id' => $user['id'] ?? null,
-        'created' => date('Y-m-d H:i:s')
-    ]);
-    $data = medoo()->update('articles', ['views[+]' => 1], ['id' => $id]);
-    return $data->rowCount();
+        'user_id' => $user['id'],
+        'created' => date('Y-m-d')
+    ];
+    $count = medoo()->count('article_views', $data);
+    if ($count == 0) {
+        medoo()->insert('article_views', $data);
+        medoo()->update('articles', ['views[+]' => 1], ['id' => $id]);
+    }
 }
 
 function insert(array $data): int
@@ -84,9 +87,6 @@ function update($id, array $data): int
 function is_identic(array $old, array $new)
 {
     if (strcmp($old['title'], $new['title']) !== 0) {
-        return false;
-    }
-    if (strcmp($old['abstract'], $new['abstract']) !== 0) {
         return false;
     }
     if (strcmp($old['content'], $new['content']) !== 0) {
@@ -128,13 +128,13 @@ function validate(array $data): array
 
 function find_all(string $q, array $tags, string $order, int $page, int $itemsPerPage): array
 {
-    $sql = 'SELECT SQL_CALC_FOUND_ROWS id, title, abstract, tags FROM articles WHERE 1=1';
+    $sql = 'SELECT SQL_CALC_FOUND_ROWS id, title, tags FROM articles WHERE 1=1';
 
     $params = [];
 
     if (!empty($q)) {
         $q = '%' . $q . '%';
-        $sql .= ' AND (title LIKE ? OR abstract LIKE ? OR content LIKE ?)';
+        $sql .= ' AND (title LIKE ? OR content LIKE ?)';
         $params[] = $q;
         $params[] = $q;
         $params[] = $q;

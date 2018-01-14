@@ -163,15 +163,15 @@ function get_router()
     }, ['before' => 'auth']);
 
     $router->get('/popular', function (): array {
-        return db\article\find_selected(['id', 'title', 'abstract', 'views'], ['views' => 'DESC']);
+        return db\article\find_selected(['id', 'title', 'views'], ['views' => 'DESC']);
     }, ['before' => 'auth']);
 
     $router->get('/latest', function (): array {
-        return db\article\find_selected(['id', 'title', 'abstract', 'created'], ['created' => 'DESC']);
+        return db\article\find_selected(['id', 'title', 'created'], ['created' => 'DESC']);
     }, ['before' => 'auth']);
 
     $router->get('/modified', function (): array {
-        return db\article\find_selected(['id', 'title', 'abstract', 'modified'], ['modified' => 'DESC']);
+        return db\article\find_selected(['id', 'title', 'modified'], ['modified' => 'DESC']);
     }, ['before' => 'auth']);
 
     $router->post('/upload', function () {

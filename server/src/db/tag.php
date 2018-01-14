@@ -109,7 +109,7 @@ function find_selected_tags(string $q, array $tags): array
 
     if (!empty($q)) {
         $q = '%' . $q . '%';
-        $sql .= ' AND (a.title LIKE ? OR a.abstract LIKE ? OR a.content LIKE ?)';
+        $sql .= ' AND (a.title LIKE ? OR a.content LIKE ?)';
         $params[] = $q;
         $params[] = $q;
         $params[] = $q;
