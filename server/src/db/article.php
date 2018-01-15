@@ -137,7 +137,6 @@ function find_all(string $q, array $tags, string $order, int $page, int $itemsPe
         $sql .= ' AND (title LIKE ? OR content LIKE ?)';
         $params[] = $q;
         $params[] = $q;
-        $params[] = $q;
     }
 
     if (!empty($tags)) {
