@@ -174,6 +174,10 @@ function get_router()
         return db\article\find_selected(['id', 'title', 'modified'], ['modified' => 'DESC']);
     }, ['before' => 'auth']);
 
+    $router->get('/liked', function (): array {
+        return db\article\find_selected(['id', 'title', 'likes'], ['likes' => 'DESC']);
+    }, ['before' => 'auth']);
+
     $router->post('/upload', function () {
 
         $user = jwt\get_user_from_token();
