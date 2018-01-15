@@ -35,6 +35,19 @@ function find_all(string $sort): array
     return $articles;
 }
 
+function find_by_user_ids(array $ids): array
+{
+    $ids = array_filter($ids);
+    if (empty($ids)) {
+        return [];
+    }
+    $users = [];
+    foreach (medoo()->select('users', ['id', 'username', 'name', 'email', 'lastlogin', 'created', 'modified', 'deleted'], ['id' => $ids]) as $row) {
+        $users[$row['id']] = $row;
+    }
+    return $users;
+}
+
 function update_last_login(string $username)
 {
     medoo()->update('users', ['lastlogin' => date('Y-m-d H:i:s')], ['username' => $username]);
