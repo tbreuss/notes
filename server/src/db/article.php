@@ -2,6 +2,7 @@
 
 namespace db\article;
 
+use db\article_views;
 use db\tag;
 use db\user;
 use jwt;
@@ -41,6 +42,7 @@ function find_one(int $id, bool $throwException = true): array
     $users = user\find_by_user_ids($ids);
     $article['created_by_user'] = $users[$article['created_by']] ?? [];
     $article['modified_by_user'] = $users[$article['modified_by']] ?? [];
+    $article['views_date'] = article_views\find_latest_date($id);
     $article['tags'] = explode(',', $article['tags']);
     return $article;
 }

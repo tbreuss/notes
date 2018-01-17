@@ -18,6 +18,7 @@
       "src/jwt.php",
       "src/request.php",
       "src/db/article.php",
+      "src/db/article_views.php",
       "src/db/tag.php",
       "src/db/user.php"
     ]
