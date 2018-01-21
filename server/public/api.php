@@ -153,6 +153,10 @@ function get_router()
         return db\user\find_all($sort);
     }, ['before' => 'auth']);
 
+    $router->get('/users/{id}', function (int $id): array {
+        return db\user\find_by_user_ids([$id]);
+    }, ['before' => 'auth']);
+
     $router->get('/tags', function (): array {
         $sort = request\get_var('sort', 'name');
         return db\tag\find_all($sort);
