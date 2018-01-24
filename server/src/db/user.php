@@ -48,9 +48,10 @@ function find_by_user_ids(array $ids): array
     return $users;
 }
 
-function update_last_login(string $username)
+function update_last_login(string $username): int
 {
-    medoo()->update('users', ['lastlogin' => date('Y-m-d H:i:s')], ['username' => $username]);
+    $pdo = medoo()->update('users', ['lastlogin' => date('Y-m-d H:i:s')], ['username' => $username]);
+    return $pdo->rowCount();
 }
 
 function find_one(string $username): array
@@ -65,17 +66,17 @@ function find_one(string $username): array
     return $user;
 }
 
-function validate_password($password, array $user)
+function validate_password(string $password, array $user): bool
 {
     return hash_password($password, $user['salt']) === $user['password'];
 }
 
-function hash_password($password, $salt)
+function hash_password(string $password, string $salt): string
 {
     return md5($salt . $password);
 }
 
-function generate_salt()
+function generate_salt(): string
 {
     return uniqid('', true);
 }
@@ -90,4 +91,34 @@ function validate_credentials(array $data): array
         $errors['password'] = 'Passwort fehlt';
     }
     return $errors;
+}
+
+function create(array $data): int
+{
+    $salt = generate_salt();
+    $data['password'] = hash_password($data['password'], $salt);
+    $data['salt'] = $salt;
+    $data['created'] = date('Y-m-d H:i:s');
+    medoo()->insert('users', $data);
+    return medoo()->id();
+}
+
+function renew_password(string $username, string $password): int
+{
+    $salt = generate_salt();
+    $data = [
+        'password' => hash_password($password, $salt),
+        'salt' => $salt,
+        'modified' =>  date('Y-m-d H:i:s')
+    ];
+    $where = [
+        'username' => $username
+    ];
+    $pdo = medoo()->update('users', $data, $where);
+    $error = medoo()->error();
+
+    if (!empty($error[1])) {
+        throw new \Exception($error[2], $error[1]);
+    }
+    return $pdo->rowCount();
 }
