@@ -26,6 +26,6 @@ if (empty($user)) {
     exit;
 }
 
-echo db\user\renew_password($options['username'], $options['password']);
+db\user\renew_password($options['username'], $options['password']);
 
 echo 'password for user renewed successfully';
