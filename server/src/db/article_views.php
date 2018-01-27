@@ -8,6 +8,13 @@ use function common\{
 
 function find_latest_date(int $articleId): string
 {
-    $date = medoo()->get('article_views', 'created', ['article_id' => $articleId]);
+    $date = medoo()->get(
+        'article_views',
+        'created',
+        [
+            'article_id' => $articleId,
+            'ORDER' => ['created' => 'DESC']
+        ]
+    );
     return $date;
 }
